@@ -6,18 +6,7 @@ import { sendChatMessage } from '../api/chatApi';
  * ChatWindow – main chat area with message list, input box,
  * loading spinner, and error display.
  */
-export default function ChatWindow({ filters }) {
-    const [messages, setMessages] = useState([
-        {
-            id: 'welcome',
-            role: 'bot',
-            text: 'Xin chào! Tôi là trợ lý đọc báo thông minh. Bạn có thể hỏi tôi về tin tức từ VnExpress, Tuổi Trẻ, và Thanh Niên.\n\nVí dụ: "Tin tức công nghệ mới nhất?" hoặc "Tổng hợp tình hình kinh tế tuần qua?"',
-            sources: [],
-            intent: 'simple',
-            timestamp: _now(),
-        },
-    ]);
-
+export default function ChatWindow({ chatId, filters, messages, onMessagesChange }) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -25,9 +14,24 @@ export default function ChatWindow({ filters }) {
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const shouldAutoScrollRef = useRef(true);
+    const messagesRef = useRef(Array.isArray(messages) ? messages : []);
 
     const hasActiveFilters = (filters?.sources?.length ?? 0) > 0 || (filters?.categories?.length ?? 0) > 0;
-    const isEmptyState = messages.length === 1 && !isLoading;
+    const safeMessages = Array.isArray(messages) ? messages : [];
+    const isEmptyState = safeMessages.length === 1 && !isLoading;
+
+    useEffect(() => {
+        messagesRef.current = safeMessages;
+    }, [safeMessages]);
+
+    // Reset transient UI state when switching chat sessions.
+    // (The chat session is identified by the message array changing dramatically.)
+    useEffect(() => {
+        setError(null);
+        setIsLoading(false);
+        setInput('');
+        shouldAutoScrollRef.current = true;
+    }, [chatId]);
 
     // Auto-scroll only if user is already near the bottom. This avoids layout "jumping"
     // when banners/toasts appear or when the user scrolls up to read older messages.
@@ -36,7 +40,7 @@ export default function ChatWindow({ filters }) {
         const el = scrollRef.current;
         if (!el) return;
         el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
-    }, [messages, isLoading]);
+    }, [safeMessages, isLoading]);
 
     // Focus input on mount
     useEffect(() => {
@@ -54,7 +58,9 @@ export default function ChatWindow({ filters }) {
             text: question,
             timestamp: _now(),
         };
-        setMessages((prev) => [...prev, userMsg]);
+        const nextAfterUser = [...messagesRef.current, userMsg];
+        messagesRef.current = nextAfterUser;
+        onMessagesChange && onMessagesChange(nextAfterUser);
         setInput('');
         setError(null);
         setIsLoading(true);
@@ -73,7 +79,9 @@ export default function ChatWindow({ filters }) {
                 intent: data.intent || 'simple',
                 timestamp: _now(),
             };
-            setMessages((prev) => [...prev, botMsg]);
+            const nextAfterBot = [...messagesRef.current, botMsg];
+            messagesRef.current = nextAfterBot;
+            onMessagesChange && onMessagesChange(nextAfterBot);
         } catch (err) {
             setError(_formatError(err));
         } finally {
@@ -127,7 +135,7 @@ export default function ChatWindow({ filters }) {
                             </div>
                         )}
 
-                        {messages.map((msg) => (
+                        {safeMessages.map((msg) => (
                             <MessageBubble key={msg.id} message={msg} />
                         ))}
 
