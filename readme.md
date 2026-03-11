@@ -1,4 +1,4 @@
-# Chatbot Tin tức RAG
+# News RAG Chatbot
 
 Chatbot hỏi đáp tin tức tiếng Việt sử dụng kỹ thuật RAG (Retrieval-Augmented Generation). Hỗ trợ trả lời câu hỏi dựa trên tập dữ liệu tin tức được tự động thu thập từ 3 nguồn báo: **VnExpress**, **Tuổi Trẻ**, và **Thanh Niên**.
 
@@ -32,21 +32,14 @@ cd backend
 
 # Tạo thư mục môi trường ảo và kích hoạt
 python -m venv venv
-
-# macOS/Linux:
-source venv/bin/activate
-# Windows (PowerShell):
-# .\\venv\\Scripts\\Activate.ps1
+venv\Scripts\activate
 
 # Cài đặt các thư viện phụ thuộc
 pip install -r requirements.txt
 
 # Tạo và cấu hình biến môi trường
-cp .env.example .env
-# Windows (PowerShell):
-# Copy-Item .env.example .env
-#
-# Lưu ý: Mở file .env và điền API keys (tối thiểu OPENAI_API_KEY).
+copy .env.example .env
+# Lưu ý: Mở file .env và điền đầy đủ các API key
 
 # Khởi chạy server
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
@@ -61,10 +54,6 @@ cd frontend
 
 # Cài đặt dependencies
 npm install
-
-# (Tùy chọn) Nếu backend không cùng origin, cấu hình API base:
-# cp .env.example .env
-# rồi sửa VITE_API_BASE trong .env
 
 # Khởi chạy dev server
 npm run dev
