@@ -37,31 +37,31 @@ def _detect_intent(question: str) -> str:
     return "simple"
 
 
-_SIMPLE_PROMPT = """Ban la tro ly doc bao thong minh. Dua tren cac doan tin tuc sau day tu bao Viet Nam, hay tra loi cau hoi cua nguoi dung bang tieng Viet mot cach chinh xac va suc tich.
+_SIMPLE_PROMPT = """Bạn là trợ lý đọc báo thông minh. Dựa trên các đoạn tin tức sau đây từ báo Việt Nam, hãy trả lời câu hỏi của người dùng bằng tiếng Việt một cách chính xác và súc tích.
 
 Context:
 {chunks}
 
-Cau hoi: {question}
+Câu hỏi: {question}
 
-Yeu cau:
-- Tra loi dua tren context duoc cung cap
-- Neu khong co du thong tin, noi ro "Toi khong tim thay thong tin ve van de nay trong du lieu hien tai"
-- Cuoi cau tra loi liet ke nguon tham khao kem link"""
+Yêu cầu:
+- Trả lời dựa trên context được cung cấp
+- Nếu không có đủ thông tin, nói rõ "Tôi không tìm thấy thông tin về vấn đề này trong dữ liệu hiện tại"
+- Cuối câu trả lời liệt kê nguồn tham khảo kèm link"""
 
-_MULTI_SOURCE_PROMPT = """Ban la tro ly doc bao thong minh chuyen tong hop tin tuc. Dua tren cac doan tin tuc sau day tu nhieu bao Viet Nam, hay tong hop va tra loi cau hoi cua nguoi dung.
+_MULTI_SOURCE_PROMPT = """Bạn là trợ lý đọc báo thông minh chuyên tổng hợp tin tức. Dựa trên các đoạn tin tức sau đây từ nhiều báo Việt Nam, hãy tổng hợp và trả lời câu hỏi của người dùng.
 
-Context (nhom theo nguon):
+Context (nhóm theo nguồn):
 {chunks}
 
-Cau hoi: {question}
+Câu hỏi: {question}
 
-Yeu cau:
-- Tong hop thong tin tu tat ca cac nguon
-- Trinh bay theo cau truc: Tong quan -> Chi tiet theo tung goc do/nguon -> Ket luan
-- Ghi ro "Theo VnExpress...", "Theo Tuoi Tre...", "Theo Thanh Nien..." khi trich dan
-- Neu thong tin mau thuan giua cac nguon, ghi nhan ca hai goc nhin
-- Cuoi cau tra loi liet ke tat ca nguon tham khao kem link"""
+Yêu cầu:
+- Tổng hợp thông tin từ tất cả các nguồn
+- Trình bày theo cấu trúc: Tổng quan -> Chi tiết theo từng góc độ/nguồn -> Kết luận
+- Ghi rõ "Theo VnExpress...", "Theo Tuổi Trẻ...", "Theo Thanh Niên..." khi trích dẫn
+- Nếu thông tin mâu thuẫn giữa các nguồn, ghi nhận cả hai góc nhìn
+- Cuối câu trả lời liệt kê tất cả nguồn tham khảo kèm link"""
 
 
 def _build_context(chunks: list[dict], intent: str) -> str:
@@ -142,8 +142,8 @@ def _call_llm(prompt: str) -> str:
         return answer
 
     return (
-        "Xin loi, hien tai toi khong the xu ly yeu cau cua ban. "
-        "Vui long thu lai sau hoac kiem tra cau hinh API key."
+        "Xin lỗi, hiện tại tôi không thể xử lý yêu cầu của bạn. "
+        "Vui lòng thử lại sau hoặc kiểm tra cấu hình API key."
     )
 
 
@@ -191,7 +191,7 @@ def chat(request: ChatRequest) -> ChatResponse:
 
     if not chunks:
         return ChatResponse(
-            answer="Toi khong tim thay thong tin ve van de nay trong du lieu hien tai. Hay thu lai voi cau hoi khac hoac doi du lieu duoc cap nhat.",
+            answer="Tôi không tìm thấy thông tin về vấn đề này trong dữ liệu hiện tại. Hãy thử lại với câu hỏi khác hoặc đợi dữ liệu được cập nhật.",
             sources=[],
             intent=intent,
         )

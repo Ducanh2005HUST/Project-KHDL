@@ -26,9 +26,11 @@ export default function App() {
 
     return (
         <div
-            className="h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] transition-theme overflow-hidden"
+            className="h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] transition-theme overflow-hidden relative"
             id="app-root"
         >
+            <BackgroundDecor />
+
             {/* ── Sidebar ───────────────────────────────────────── */}
             <Sidebar
                 filters={filters}
@@ -41,7 +43,7 @@ export default function App() {
             <main className="flex-1 flex flex-col min-w-0">
                 {/* Top bar */}
                 <header
-                    className="h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)] transition-theme flex-shrink-0"
+                    className="h-14 flex items-center justify-between px-4 border-b border-[var(--border-color)] bg-[var(--bg-elevated)] backdrop-blur-md transition-theme flex-shrink-0"
                     id="top-bar"
                 >
                     <div className="flex items-center gap-3">
@@ -49,7 +51,7 @@ export default function App() {
                         <button
                             id="sidebar-toggle-btn"
                             onClick={() => setSidebarCollapsed((p) => !p)}
-                            className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors"
+                            className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors focus:ring-2 focus:ring-[var(--ring)]"
                             aria-label="Toggle sidebar"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -59,16 +61,32 @@ export default function App() {
                             </svg>
                         </button>
 
-                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-                            News RAG Chatbot
-                        </h2>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/15 flex items-center justify-center shadow-[var(--shadow-sm)]">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4v-4H6a2 2 0 0 1-2-2V7z" />
+                                    <path d="M8 9h8" />
+                                    <path d="M8 13h6" />
+                                </svg>
+                            </div>
+                            <div className="leading-tight">
+                                <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                                    Chatbot Tin tức RAG
+                                </h2>
+                                <p className="text-[10px] text-[var(--text-muted)]">
+                                    Trợ lý hỏi đáp tin tức
+                                </p>
+                            </div>
+                        </div>
+
+                        <FilterPills filters={filters} onClear={() => setFilters({ sources: [], categories: [] })} />
                     </div>
 
                     {/* Dark mode toggle */}
                     <button
                         id="theme-toggle-btn"
                         onClick={() => setDark((d) => !d)}
-                        className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors"
+                        className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] transition-colors focus:ring-2 focus:ring-[var(--ring)]"
                         aria-label="Toggle theme"
                     >
                         {dark ? (
@@ -99,5 +117,75 @@ export default function App() {
                 </div>
             </main>
         </div>
+    );
+}
+
+function FilterPills({ filters, onClear }) {
+    const sources = filters.sources ?? [];
+    const categories = filters.categories ?? [];
+    const isAll = sources.length === 0 && categories.length === 0;
+
+    return (
+        <div className="hidden md:flex items-center gap-2">
+            <span className="text-[10px] text-[var(--text-muted)]">Lọc:</span>
+            <span
+                className={`
+          text-[10px] px-2 py-0.5 rounded-full border
+          ${sources.length === 0
+                        ? 'border-[var(--border-color)] text-[var(--text-muted)]'
+                        : 'border-[var(--accent)]/20 bg-[var(--accent-soft)] text-[var(--accent)]'
+                    }
+        `}
+                title={sources.length === 0 ? 'Tất cả nguồn' : sources.join(', ')}
+            >
+                {sources.length === 0 ? 'Tất cả nguồn' : `${sources.length} nguồn`}
+            </span>
+            <span
+                className={`
+          text-[10px] px-2 py-0.5 rounded-full border
+          ${categories.length === 0
+                        ? 'border-[var(--border-color)] text-[var(--text-muted)]'
+                        : 'border-[var(--accent)]/20 bg-[var(--accent-soft)] text-[var(--accent)]'
+                    }
+        `}
+                title={categories.length === 0 ? 'Tất cả chủ đề' : categories.join(', ')}
+            >
+                {categories.length === 0 ? 'Tất cả chủ đề' : `${categories.length} chủ đề`}
+            </span>
+
+            {!isAll && (
+                <button
+                    type="button"
+                    onClick={onClear}
+                    className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors focus:ring-2 focus:ring-[var(--ring)]"
+                    title="Xóa tất cả bộ lọc"
+                >
+                    Xóa lọc
+                </button>
+            )}
+        </div>
+    );
+}
+
+function BackgroundDecor() {
+    // Decorative shapes to complement the CSS gradient background.
+    return (
+        <>
+            <div
+                className="pointer-events-none absolute -top-24 -left-28 w-[520px] h-[520px] rounded-full blur-3xl opacity-25"
+                style={{ background: 'radial-gradient(circle at 30% 30%, var(--accent) 0%, transparent 62%)' }}
+                aria-hidden="true"
+            />
+            <div
+                className="pointer-events-none absolute -bottom-40 -right-40 w-[680px] h-[680px] rounded-full blur-3xl opacity-20"
+                style={{ background: 'radial-gradient(circle at 40% 40%, rgba(16,185,129,0.9) 0%, transparent 62%)' }}
+                aria-hidden="true"
+            />
+            <div
+                className="pointer-events-none absolute top-1/3 -right-56 w-[520px] h-[520px] rounded-full blur-3xl opacity-15"
+                style={{ background: 'radial-gradient(circle at 50% 50%, rgba(245,158,11,0.85) 0%, transparent 66%)' }}
+                aria-hidden="true"
+            />
+        </>
     );
 }

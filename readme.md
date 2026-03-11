@@ -1,4 +1,4 @@
-# News RAG Chatbot
+# Chatbot Tin tức RAG
 
 Chatbot hỏi đáp tin tức tiếng Việt sử dụng kỹ thuật RAG (Retrieval-Augmented Generation). Hỗ trợ trả lời câu hỏi dựa trên tập dữ liệu tin tức được tự động thu thập từ 3 nguồn báo: **VnExpress**, **Tuổi Trẻ**, và **Thanh Niên**.
 
