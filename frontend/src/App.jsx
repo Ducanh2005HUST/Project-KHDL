@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
+import {
+    initStore,
+    listChats,
+    loadChatMessages,
+    createChat,
+    setActiveChat,
+    renameChat,
+    deleteChat,
+    upsertChatMessages,
+    exportChat,
+    loadIndexOrNull,
+} from './store/chatStore';
 
 /**
  * App – root layout with dark/light toggle, sidebar, and chat window.
@@ -18,11 +30,90 @@ export default function App() {
     const [filters, setFilters] = useState({ sources: [], categories: [] });
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+    const [chatIndex, setChatIndex] = useState(() => {
+        if (typeof window === 'undefined') return null;
+        return loadIndexOrNull();
+    });
+    const [activeMessages, setActiveMessages] = useState(() => WELCOME_MESSAGES);
+
     // Apply dark class to <html>
     useEffect(() => {
         document.documentElement.classList.toggle('dark', dark);
         localStorage.setItem('theme', dark ? 'dark' : 'light');
     }, [dark]);
+
+    // Initialize chat store once (and migrate legacy single-chat if present).
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const idx = chatIndex ?? initStore({ welcomeMessages: WELCOME_MESSAGES });
+        setChatIndex(idx);
+        const activeId = idx.activeId ?? idx.chats?.[0]?.id;
+        if (activeId) {
+            const msgs = loadChatMessages(activeId, { welcomeMessages: WELCOME_MESSAGES });
+            setActiveMessages(msgs);
+        } else {
+            setActiveMessages(WELCOME_MESSAGES);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const chats = chatIndex ? listChats(chatIndex) : [];
+    const activeChatId = chatIndex?.activeId ?? null;
+
+    function handleNewChat() {
+        if (!chatIndex) return;
+        const nextIndex = createChat(chatIndex, { welcomeMessages: WELCOME_MESSAGES });
+        setChatIndex(nextIndex);
+        setActiveMessages(WELCOME_MESSAGES);
+    }
+
+    function handleSelectChat(id) {
+        if (!chatIndex) return;
+        const nextIndex = setActiveChat(chatIndex, id);
+        setChatIndex(nextIndex);
+        const msgs = loadChatMessages(id, { welcomeMessages: WELCOME_MESSAGES });
+        setActiveMessages(msgs);
+    }
+
+    function handleRenameChat(id, title) {
+        if (!chatIndex) return;
+        const nextIndex = renameChat(chatIndex, id, title);
+        setChatIndex(nextIndex);
+    }
+
+    function handleDeleteChat(id) {
+        if (!chatIndex) return;
+        const nextIndex = deleteChat(chatIndex, id, { welcomeMessages: WELCOME_MESSAGES });
+        setChatIndex(nextIndex);
+        const nextActive = nextIndex.activeId;
+        const msgs = nextActive
+            ? loadChatMessages(nextActive, { welcomeMessages: WELCOME_MESSAGES })
+            : WELCOME_MESSAGES;
+        setActiveMessages(msgs);
+    }
+
+    function handleExportChat(id) {
+        if (!chatIndex) return;
+        const payload = exportChat(chatIndex, id);
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chat-${(payload.chat?.title ?? 'doan-chat').toString().slice(0, 32).replace(/\s+/g, '-')}-${new Date()
+            .toISOString()
+            .replace(/[:.]/g, '-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function handleMessagesChange(nextMessages) {
+        setActiveMessages(nextMessages);
+        if (!chatIndex || !activeChatId) return;
+        const nextIndex = upsertChatMessages(chatIndex, activeChatId, nextMessages);
+        setChatIndex(nextIndex);
+    }
 
     return (
         <div
@@ -37,6 +128,13 @@ export default function App() {
                 onFiltersChange={setFilters}
                 collapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed((p) => !p)}
+                chats={chats}
+                activeChatId={activeChatId}
+                onNewChat={handleNewChat}
+                onSelectChat={handleSelectChat}
+                onRenameChat={handleRenameChat}
+                onDeleteChat={handleDeleteChat}
+                onExportChat={handleExportChat}
             />
 
             {/* ── Main area ─────────────────────────────────────── */}
@@ -113,7 +211,12 @@ export default function App() {
 
                 {/* Chat content */}
                 <div className="flex-1 min-h-0">
-                    <ChatWindow filters={filters} />
+                    <ChatWindow
+                        filters={filters}
+                        chatId={activeChatId}
+                        messages={activeMessages}
+                        onMessagesChange={handleMessagesChange}
+                    />
                 </div>
             </main>
         </div>
@@ -189,3 +292,14 @@ function BackgroundDecor() {
         </>
     );
 }
+
+const WELCOME_MESSAGES = [
+    {
+        id: 'welcome',
+        role: 'bot',
+        text: 'Xin chào! Tôi là trợ lý đọc báo thông minh. Bạn có thể hỏi tôi về tin tức từ VnExpress, Tuổi Trẻ, và Thanh Niên.\n\nVí dụ: "Tin tức công nghệ mới nhất?" hoặc "Tổng hợp tình hình kinh tế tuần qua?"',
+        sources: [],
+        intent: 'simple',
+        timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    },
+];

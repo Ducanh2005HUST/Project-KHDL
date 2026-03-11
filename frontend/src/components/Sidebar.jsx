@@ -20,9 +20,24 @@ const CATEGORY_LABELS = {
 /**
  * Sidebar – source / category filters + mini dashboard.
  */
-export default function Sidebar({ filters, onFiltersChange, collapsed, onToggle }) {
+export default function Sidebar({
+    filters,
+    onFiltersChange,
+    collapsed,
+    onToggle,
+    chats = [],
+    activeChatId = null,
+    onNewChat,
+    onSelectChat,
+    onRenameChat,
+    onDeleteChat,
+    onExportChat,
+}) {
     const [stats, setStats] = useState(null);
     const [statsError, setStatsError] = useState(false);
+    const [chatQuery, setChatQuery] = useState('');
+    const [editingId, setEditingId] = useState(null);
+    const [draftTitle, setDraftTitle] = useState('');
 
     // Fetch stats on mount and every 60 seconds
     useEffect(() => {
@@ -73,6 +88,12 @@ export default function Sidebar({ filters, onFiltersChange, collapsed, onToggle 
     const isAllSources = filters.sources.length === 0;
     const isAllCategories = filters.categories.length === 0;
     const isAll = isAllSources && isAllCategories;
+
+    const filteredChats = chats.filter((c) => {
+        if (!chatQuery.trim()) return true;
+        const t = (c?.title ?? '').toString().toLowerCase();
+        return t.includes(chatQuery.trim().toLowerCase());
+    });
 
     return (
         <aside
@@ -141,6 +162,159 @@ export default function Sidebar({ filters, onFiltersChange, collapsed, onToggle 
                             <path d="M15 18l-6-6 6-6" />
                         </svg>
                     </button>
+                </div>
+
+                {/* ── Chats (ChatGPT-like) ───────────────────────── */}
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                            Đoạn chat
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={() => onNewChat && onNewChat()}
+                            className="text-[10px] font-semibold px-2 py-1 rounded-full bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors shadow-[var(--shadow-sm)] focus:ring-2 focus:ring-[var(--ring)]"
+                            title="Tạo đoạn chat mới"
+                        >
+                            Mới
+                        </button>
+                    </div>
+
+                    <div className="relative">
+                        <input
+                            value={chatQuery}
+                            onChange={(e) => setChatQuery(e.target.value)}
+                            placeholder="Tìm kiếm đoạn chat..."
+                            className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                        />
+                        {chatQuery.trim() && (
+                            <button
+                                type="button"
+                                onClick={() => setChatQuery('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2 py-1 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+                                aria-label="Xóa tìm kiếm"
+                                title="Xóa"
+                            >
+                                x
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="mt-3 space-y-1.5">
+                        {filteredChats.length === 0 ? (
+                            <p className="text-xs text-[var(--text-muted)]">
+                                Không có đoạn chat phù hợp.
+                            </p>
+                        ) : (
+                            filteredChats.map((chat) => {
+                                const active = chat.id === activeChatId;
+                                const when = chat.updatedAt
+                                    ? new Date(chat.updatedAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+                                    : '';
+                                const isEditing = editingId === chat.id;
+
+                                return (
+                                    <div
+                                        key={chat.id}
+                                        className={`
+                      group rounded-2xl border
+                      ${active ? 'border-[var(--accent)]/25 bg-[var(--accent-soft)]' : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)]'}
+                      transition-colors shadow-[var(--shadow-sm)]
+                    `}
+                                    >
+                                        <div className="flex items-center gap-2 px-3 py-2.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => onSelectChat && onSelectChat(chat.id)}
+                                                className="flex-1 min-w-0 text-left"
+                                                title={chat.title}
+                                            >
+                                                {isEditing ? (
+                                                    <input
+                                                        autoFocus
+                                                        value={draftTitle}
+                                                        onChange={(e) => setDraftTitle(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                onRenameChat && onRenameChat(chat.id, draftTitle);
+                                                                setEditingId(null);
+                                                            }
+                                                            if (e.key === 'Escape') {
+                                                                e.preventDefault();
+                                                                setEditingId(null);
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            onRenameChat && onRenameChat(chat.id, draftTitle);
+                                                            setEditingId(null);
+                                                        }}
+                                                        className="w-full px-2 py-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                                                        maxLength={80}
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <p className={`text-sm font-semibold truncate ${active ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
+                                                            {chat.title || 'Đoạn chat'}
+                                                        </p>
+                                                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5 tabular-nums">
+                                                            {when}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {!isEditing && (
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditingId(chat.id);
+                                                            setDraftTitle(chat.title || '');
+                                                        }}
+                                                        className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus:ring-2 focus:ring-[var(--ring)]"
+                                                        title="Đổi tên"
+                                                        aria-label="Đổi tên đoạn chat"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                            <path d="M12 20h9" />
+                                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onExportChat && onExportChat(chat.id)}
+                                                        className="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10 transition-colors focus:ring-2 focus:ring-[var(--ring)]"
+                                                        title="Tải JSON"
+                                                        aria-label="Tải đoạn chat"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                            <path d="M7 10l5 5 5-5" />
+                                                            <path d="M12 15V3" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onDeleteChat && onDeleteChat(chat.id)}
+                                                        className="p-2 rounded-xl text-red-500/80 hover:text-red-600 hover:bg-red-500/10 transition-colors focus:ring-2 focus:ring-[var(--ring)]"
+                                                        title="Xóa"
+                                                        aria-label="Xóa đoạn chat"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                            <path d="M3 6h18" />
+                                                            <path d="M8 6V4h8v2" />
+                                                            <path d="M19 6l-1 14H6L5 6" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Dashboard mini ──────────────────────────────── */}
