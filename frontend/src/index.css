@@ -20,6 +20,8 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* ── Light mode defaults ──────────────────────────────────── */
@@ -28,6 +30,7 @@ body {
   --bg-primary: #f8f9fc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f0f2f7;
+  --bg-elevated: rgba(255, 255, 255, 0.72);
   --text-primary: #1a1d2b;
   --text-secondary: #596076;
   --text-muted: #9ba4bc;
@@ -35,12 +38,15 @@ body {
   --accent: #3378ff;
   --accent-hover: #1b57f5;
   --accent-soft: #eef5ff;
+  --ring: rgba(51, 120, 255, 0.25);
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 /* ── Dark mode ────────────────────────────────────────────── */
@@ -49,6 +55,7 @@ body {
   --bg-primary: #10121c;
   --bg-secondary: #171a27;
   --bg-tertiary: #1e2130;
+  --bg-elevated: rgba(23, 26, 39, 0.72);
   --text-primary: #e8eaf0;
   --text-secondary: #b3bbd0;
   --text-muted: #6b7390;
@@ -56,9 +63,35 @@ body {
   --accent: #599cff;
   --accent-hover: #3378ff;
   --accent-soft: #142057;
+  --ring: rgba(89, 156, 255, 0.22);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── App Background ───────────────────────────────────────── */
+
+body {
+  background-image:
+    radial-gradient(1200px 700px at 8% 10%, rgba(51, 120, 255, 0.12), transparent 60%),
+    radial-gradient(900px 600px at 92% 18%, rgba(16, 185, 129, 0.10), transparent 55%),
+    radial-gradient(900px 650px at 55% 92%, rgba(245, 158, 11, 0.10), transparent 55%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.02));
+  background-attachment: fixed;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(1200px 700px at 8% 10%, rgba(89, 156, 255, 0.16), transparent 60%),
+    radial-gradient(900px 600px at 92% 18%, rgba(16, 185, 129, 0.12), transparent 55%),
+    radial-gradient(900px 650px at 55% 92%, rgba(245, 158, 11, 0.10), transparent 55%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.35));
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */
@@ -81,6 +114,11 @@ body {
 
 .transition-theme {
   transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 /* ── Typing dots animation ────────────────────────────────── */

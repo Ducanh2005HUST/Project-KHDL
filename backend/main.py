@@ -42,7 +42,7 @@ def _crawl_and_embed() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config.setup_logging()
-    logger.info("Starting News RAG Chatbot server ...")
+    logger.info("Dang khoi dong Chatbot Tin tuc RAG ...")
 
     initial_thread = Thread(target=_crawl_and_embed, daemon=True)
     initial_thread.start()
@@ -66,8 +66,8 @@ async def lifespan(app: FastAPI):
     logger.info("Server shut down.")
 
 app = FastAPI(
-    title="News RAG Chatbot",
-    description="Vietnamese news Q&A powered by RAG",
+    title="Chatbot Tin tức",
+    description="Hỏi đáp tin tức tiếng Việt ứng dụng RAG",
     version="1.0.0",
     lifespan=lifespan,
 )
