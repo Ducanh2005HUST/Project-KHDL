@@ -6,7 +6,7 @@ from datetime import datetime
 from threading import Thread
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 import config
@@ -112,6 +112,12 @@ async def stats_endpoint():
         raise HTTPException(status_code=500, detail="Failed to fetch stats")
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "version": "1.0.0"}
+@app.post("/crawl")
+async def trigger_crawl(background_tasks: BackgroundTasks):
+    """Trigger an immediate crawl+embed cycle."""
+    background_tasks.add_task(_crawl_and_embed)
+    return {
+        "status": "started",
+        "message": "Crawl cycle triggered",
+        "last_crawled_at": _last_crawled_at,
+    }
