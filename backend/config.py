@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
-CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_data"))
+CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_data_new"))
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -22,9 +22,11 @@ EMBEDDING_BATCH_SIZE = 20          # chunks per API call
 EMBEDDING_SLEEP_SECONDS = 1.0      # pause between batches (rate-limit guard)
 
 LLM_MODEL = "gpt-4o-mini"
-LLM_FALLBACK_MODEL = "claude-3-5-haiku-20241022"
-LLM_MAX_TOKENS = 2048
-LLM_TEMPERATURE = 0.3
+COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
+
+# Reranking
+RERANK_TOP_N = 5  # number of chunks to keep after reranking
+RERANK_MODEL = "rerank-multilingual-v3.0"
 
 
 CHUNK_SIZE = 300         # approximate tokens per chunk

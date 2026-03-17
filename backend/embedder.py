@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import time
 from typing import Optional
 
@@ -22,6 +23,8 @@ def _get_collection() -> chromadb.Collection:
     global _chroma_client, _collection
     if _collection is None:
         logger.info("Initializing ChromaDB at: %s", config.CHROMA_PATH)
+        # Ensure directory exists before initializing ChromaDB
+        os.makedirs(config.CHROMA_PATH, exist_ok=True)
         _chroma_client = chromadb.PersistentClient(path=config.CHROMA_PATH)
         _collection = _chroma_client.get_or_create_collection(
             name="news_articles",

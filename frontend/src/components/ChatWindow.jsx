@@ -69,6 +69,11 @@ export default function ChatWindow({ chatId, filters, messages, onMessagesChange
             const data = await sendChatMessage(question, {
                 sources: filters.sources,
                 categories: filters.categories,
+                history: messagesRef.current.map(msg => ({
+                    role: msg.role,
+                    text: msg.text,
+                    timestamp: msg.timestamp
+                }))
             });
 
             const botMsg = {

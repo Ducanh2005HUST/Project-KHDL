@@ -3,19 +3,22 @@ const API_BASE = 'http://localhost:8000';
 /**
  * Send a chat question to the backend RAG pipeline.
  * @param {string} question
- * @param {{ sources?: string[], categories?: string[] }} filters
+ * @param {{ sources?: string[], categories?: string[], history?: Array<{role: string, text: string}> }} options
  * @returns {Promise<{ answer: string, sources: Array, intent: string }>}
  */
-export async function sendChatMessage(question, filters = {}) {
+export async function sendChatMessage(question, options = {}) {
+    const { sources = [], categories = [], history = [] } = options;
+
     const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             question,
             filters: {
-                sources: filters.sources || [],
-                categories: filters.categories || [],
+                sources,
+                categories,
             },
+            history,
         }),
     });
 

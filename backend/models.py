@@ -18,9 +18,15 @@ class ChatFilters(BaseModel):
     sources: list[str] = Field(default_factory=list)
     categories: list[str] = Field(default_factory=list)
 
+class Message(BaseModel):
+    role: str  # "user" or "bot"
+    text: str
+    timestamp: Optional[str] = None
+
 class ChatRequest(BaseModel):
     question: str
     filters: ChatFilters = Field(default_factory=ChatFilters)
+    history: list[Message] = Field(default_factory=list)
 
 class SourceInfo(BaseModel):
     title: str
