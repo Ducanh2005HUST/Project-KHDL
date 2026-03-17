@@ -49,7 +49,9 @@ venv.bak/
 .env.local
 
 backend/chroma_data/
+backend/chroma_data_new/
 chroma_data/
+chroma_data_new/
 *.db
 *.sqlite3
 
@@ -67,3 +69,7 @@ build/
 
 logs
 *.log
+
+claude.md
+claudeignore
+.claude/
