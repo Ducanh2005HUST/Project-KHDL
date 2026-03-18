@@ -1,5 +1,5 @@
-const API_BASE = 'http://localhost:8000';
-
+// frontend/src/api/chatApi.js
+const API_BASE = import.meta.env.VITE_API_URL || 'https://chatbot-khdl-branch.onrender.com';
 /**
  * Send a chat question to the backend RAG pipeline.
  * @param {string} question
