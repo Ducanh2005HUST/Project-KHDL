@@ -62,7 +62,12 @@ def _chunk_text(text: str, chunk_size: int = None, overlap: int = None) -> list[
     return chunks
 
 def _embed_texts(texts: list[str]) -> list[list[float]]:
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
+    try:
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+    except Exception as e:
+        logger.error("Failed to create OpenAI client: %s", e)
+        raise
+
     all_embeddings: list[list[float]] = []
     batch_size = config.EMBEDDING_BATCH_SIZE
 

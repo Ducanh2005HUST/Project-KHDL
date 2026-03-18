@@ -4,6 +4,8 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 from threading import Thread
+import traceback
+import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, BackgroundTasks
@@ -16,6 +18,10 @@ from embedder import embed_articles, get_stats
 from models import ChatRequest, ChatResponse, StatsResponse
 
 logger = logging.getLogger("server")
+
+# Unset SSL_CERT_FILE to avoid SSL certificate file not found error
+if "SSL_CERT_FILE" in os.environ:
+    del os.environ["SSL_CERT_FILE"]
 
 _last_crawled_at: str | None = None
 _total_articles: int = 0
@@ -38,6 +44,7 @@ def _crawl_and_embed() -> None:
         )
     except Exception as exc:
         logger.error("Crawl+embed cycle failed: %s", exc)
+        logger.error("Chat endpoint error: %s\n%s", exc, traceback.format_exc())
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
