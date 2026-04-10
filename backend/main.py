@@ -12,25 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import config
 from chatbot import chat
 from crawler import run_crawl
-from faiss_embedder import embed_articles, get_stats, init_index
-from finance_analyzer import (
-    is_finance_question,
-    extract_financial_entities,
-    sentiment_analysis_finance,
-    trend_detection,
-    generate_finance_summary
-)
+from faiss_embedder import embed_articles, get_stats, init_index, get_all_articles
 from models import (
     ChatRequest,
     ChatResponse,
-    StatsResponse,
-    FinanceAnalysisRequest,
-    FinanceAnalysisResponse,
-    FinanceTrendsResponse,
-    SentimentRequest,
-    SentimentResponse,
-    FinanceEntity,
-    TrendItem
+    StatsResponse
 )
 
 logger = logging.getLogger("server")
@@ -135,57 +121,3 @@ async def stats_endpoint():
         raise HTTPException(status_code=500, detail="Failed to fetch stats")
 
 
-@app.post("/finance/analysis", response_model=FinanceAnalysisResponse)
-async def finance_analysis_endpoint(request: FinanceAnalysisRequest):
-    try:
-        question = request.question
-        is_finance = is_finance_question(question)
-        entities = extract_financial_entities(question) if is_finance else {"stocks": [], "companies": [], "metrics": []}
-        sentiment = sentiment_analysis_finance(question) if is_finance else "trung tính"
-
-        return FinanceAnalysisResponse(
-            is_finance_related=is_finance,
-            entities=FinanceEntity(**entities),
-            sentiment=sentiment
-        )
-    except Exception as exc:
-        logger.error("Finance analysis endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to analyze finance question")
-
-
-@app.get("/finance/trends", response_model=FinanceTrendsResponse)
-async def finance_trends_endpoint():
-    try:
-        # Get recent articles for trend detection
-        from faiss_embedder import get_all_articles
-        articles = get_all_articles()
-
-        # Get trends for recent 7 days
-        trends = trend_detection(articles, days=7)
-
-        # Convert to response model
-        trend_items = [TrendItem(keyword=k, count=v) for k, v in trends.items()]
-
-        return FinanceTrendsResponse(
-            trends=trend_items,
-            total_articles=len(articles)
-        )
-    except Exception as exc:
-        logger.error("Finance trends endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to fetch finance trends")
-
-
-@app.post("/finance/sentiment", response_model=SentimentResponse)
-async def finance_sentiment_endpoint(request: SentimentRequest):
-    try:
-        sentiment = sentiment_analysis_finance(request.text)
-        # Simple confidence based on keyword count
-        confidence = min(1.0, len(request.text.split()) / 20.0)  # Normalize confidence
-
-        return SentimentResponse(
-            sentiment=sentiment,
-            confidence=confidence
-        )
-    except Exception as exc:
-        logger.error("Finance sentiment endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to analyze sentiment")
