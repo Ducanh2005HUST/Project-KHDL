@@ -12,8 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import config
 from chatbot import chat
 from crawler import run_crawl
-from embedder import embed_articles, get_stats
-from models import ChatRequest, ChatResponse, StatsResponse
+from faiss_embedder import embed_articles, get_stats, init_index, get_all_articles
+from models import (
+    ChatRequest,
+    ChatResponse,
+    StatsResponse
+)
 
 logger = logging.getLogger("server")
 
@@ -37,12 +41,17 @@ def _crawl_and_embed() -> None:
             _total_articles,
         )
     except Exception as exc:
-        logger.error("Crawl+embed cycle failed: %s", exc)
+        import traceback
+        logger.error("Crawl+embed cycle failed: %s\\n%s", exc, traceback.format_exc())
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config.setup_logging()
     logger.info("Dang khoi dong Chatbot Tin tuc RAG ...")
+
+    # Initialize FAISS index and load existing data
+    from faiss_embedder import init_index
+    init_index()
 
     initial_thread = Thread(target=_crawl_and_embed, daemon=True)
     initial_thread.start()
@@ -112,6 +121,3 @@ async def stats_endpoint():
         raise HTTPException(status_code=500, detail="Failed to fetch stats")
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "version": "1.0.0"}

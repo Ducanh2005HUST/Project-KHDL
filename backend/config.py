@@ -11,6 +11,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_data"))
+FAISS_PATH = os.getenv("FAISS_PATH", str(BASE_DIR / "faiss_data"))
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -30,9 +31,9 @@ LLM_TEMPERATURE = 0.3
 CHUNK_SIZE = 300         # approximate tokens per chunk
 CHUNK_OVERLAP = 50       # overlap tokens between chunks
 
-SIMPLE_TOP_K = 3
-MULTI_TOP_K = 15
-SIMILARITY_THRESHOLD = 0.7
+SIMPLE_TOP_K = 8
+MULTI_TOP_K = 20
+SIMILARITY_THRESHOLD = 0.25
 
 RSS_FEEDS = [
     # VnExpress
